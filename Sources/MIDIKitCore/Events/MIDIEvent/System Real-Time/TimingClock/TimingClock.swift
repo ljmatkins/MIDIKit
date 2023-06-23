@@ -45,12 +45,20 @@ extension MIDIEvent {
 }
 
 extension MIDIEvent.TimingClock {
-    /// Returns the raw MIDI 1.0 message bytes that comprise the event.
+    /// Returns the raw MIDI 1.0 status byte for the event.
+    ///
+    /// - Note: This is mainly for internal use and is not necessary to access during typical usage
+    /// of MIDIKit, but is provided publicly for introspection and debugging purposes.
+    public func midi1RawStatusByte() -> UInt8 {
+        0xF8
+    }
+    
+    /// Returns the complete raw MIDI 1.0 message bytes that comprise the event.
     ///
     /// - Note: This is mainly for internal use and is not necessary to access during typical usage
     /// of MIDIKit, but is provided publicly for introspection and debugging purposes.
     public func midi1RawBytes() -> [UInt8] {
-        [0xF8]
+        [midi1RawStatusByte()]
     }
     
     /// Returns the raw MIDI 2.0 UMP (Universal MIDI Packet) message bytes that comprise the event.
@@ -64,7 +72,7 @@ extension MIDIEvent.TimingClock {
     
         let word = UMPWord(
             mtAndGroup,
-            0xF8,
+            midi1RawStatusByte(),
             0x00, // pad empty bytes to fill 4 bytes
             0x00
         ) // pad empty bytes to fill 4 bytes

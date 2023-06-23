@@ -50,18 +50,27 @@ extension MIDIEvent {
 }
 
 extension MIDIEvent.PitchBend {
-    /// Returns the raw MIDI 1.0 message bytes that comprise the event.
+    /// Returns the raw MIDI 1.0 status byte for the event.
+    ///
+    /// - Note: This is mainly for internal use and is not necessary to access during typical usage
+    /// of MIDIKit, but is provided publicly for introspection and debugging purposes.
+    public func midi1RawStatusByte() -> UInt8 {
+        0xE0 + channel.uInt8Value
+    }
+    
+    /// Returns the raw MIDI 1.0 data bytes for the event (excluding status byte).
+    public func midi1RawDataBytes() -> (data1: UInt8, data2: UInt8) {
+        let bytePair = value.midi1Value.bytePair
+        return (data1: bytePair.lsb, data2: bytePair.msb)
+    }
+    
+    /// Returns the complete raw MIDI 1.0 message bytes that comprise the event.
     ///
     /// - Note: This is mainly for internal use and is not necessary to access during typical usage
     /// of MIDIKit, but is provided publicly for introspection and debugging purposes.
     public func midi1RawBytes() -> [UInt8] {
-        let bytePair = value.midi1Value.bytePair
-    
-        return [
-            0xE0 + channel.uInt8Value,
-            bytePair.lsb,
-            bytePair.msb
-        ]
+        let dataBytes = midi1RawDataBytes()
+        return [midi1RawStatusByte(), dataBytes.data1, dataBytes.data2]
     }
     
     private func umpMessageType(
@@ -92,7 +101,7 @@ extension MIDIEvent.PitchBend {
     
             let word = UMPWord(
                 mtAndGroup,
-                0xE0 + channel.uInt8Value,
+                midi1RawStatusByte(),
                 bytePair.lsb,
                 bytePair.msb
             )
@@ -102,7 +111,7 @@ extension MIDIEvent.PitchBend {
         case ._2_0:
             let word1 = UMPWord(
                 mtAndGroup,
-                0xE0 + channel.uInt8Value,
+                midi1RawStatusByte(),
                 0x00, // reserved
                 0x00
             ) // reserved
